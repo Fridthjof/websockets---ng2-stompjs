@@ -6,13 +6,13 @@ import {AppComponent} from './app.component';
 import {ChartsModule} from 'ng2-charts';
 import * as SockJS from 'sockjs-client';
 
-export function receiverProvider() {
-    return new SockJS('http://192.168.3.129:8080/socket');
-}
+// export function receiverProvider() {
+//     return new SockJS('http://192.168.3.129:8080/socket');
+// }
 
 const stompConfig: StompConfig = {
     // Which server?
-    url: receiverProvider,
+    url: 'ws://192.168.3.129:1337/socket',
 
     // Headers
     // Typical keys: login, passcode, host

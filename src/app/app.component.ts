@@ -50,6 +50,7 @@ export class AppComponent implements OnInit, OnDestroy {
     // Stream of messages
     private subscription: Subscription;
     public messages: Observable<Message>;
+    public startMsg: Observable<Message>;
 
     dataIsReady: Boolean = false;
 
@@ -135,12 +136,13 @@ export class AppComponent implements OnInit, OnDestroy {
         if (this.subscribed) {
             return;
         }
-
+        // this._stompService.subscribe('/batchServer/data');
         // Stream of messages
-        this.messages = this._stompService.subscribe('/batchServer/data');
-
+        this.messages = this._stompService.subscribe('/data');
+        this.startMsg = this._stompService.subscribe('/batchServer/data');
         // Subscribe a function to be run on_next messages
         this.subscription = this.messages.subscribe(this.onNext, error2 => console.log(error2));
+        this.subscription = this.startMsg.subscribe(this.onNext, error2 => console.log(error2));
 
         this.subscribed = true;
 
@@ -155,6 +157,7 @@ export class AppComponent implements OnInit, OnDestroy {
         this.subscription.unsubscribe();
         this.subscription = null;
         this.messages = null;
+        this.startMsg = null;
 
         this.subscribed = false;
     }
@@ -164,13 +167,18 @@ export class AppComponent implements OnInit, OnDestroy {
     }
 
     public onNext = (message: Message) => {
-        console.log(message);
+        // console.log(message);
         // Store message in a history Array
         this.history.push(message.body);
+        // if(message.body == Array)i
 
+        if (Array.isArray(JSON.parse(message.body))) {
+            this.loopData(JSON.parse(message.body));
+        } else {
+            this.setData(JSON.parse(message.body));
+        }
         console.log(JSON.parse(message.body));
         // this.lineChartData = ;
-        this.loopData(JSON.parse(message.body));
     };
 
     // events
@@ -187,49 +195,51 @@ export class AppComponent implements OnInit, OnDestroy {
     }
 
     private loopData(loopThis) {
+        this.dataIsReady = false;
         for (const data of loopThis) {
-            this.xAxisData.push(data.timestamp);
-            this.data3Arr.push(data.data3);
-            this.data2Arr.push(data.data2 * data.data1);
-            if (data.data1 > 18) {
-                this.data5Arr.push(data.data5 * data.data1);
-            } else {
-                this.data5Arr.push(-1);
-            }
-            this.data1Arr.push(data.data1);
-            this.data4Arr.push(data.data4);
-            this.chartData = [
-                {
-                    data: this.data1Arr,
-                    label: 'Data 1',
-                    yAxisID: 'y-axis-1'
-                },
-                {
-                    data: this.data2Arr,
-                    label: 'Data 2',
-                    yAxisID: 'y-axis-1'
-                },
-                {
-                    data: this.data3Arr,
-                    label: 'Data 3',
-                    yAxisID: 'y-axis-2'
-                },
-                {
-                    data: this.data4Arr,
-                    label: 'Data 4',
-                    yAxisID: 'y-axis-temp'
-                },
-                {
-                    data: this.data5Arr,
-                    label: 'Data 5',
-                    yAxisID: 'y-axis-1'
-                }
-            ];
+            this.setData(data);
         }
         this.dataIsReady = true;
     }
 
     public testBtn() {
         console.log(this.chartData);
+        console.log(this.xAxisData);
+    }
+
+    private setData(obj) {
+        this.xAxisData.push(obj.timestamp);
+        this.data3Arr.push(obj.data3);
+        this.data2Arr.push(obj.data2 * obj.data1);
+        this.data5Arr.push(obj.data5 * obj.data1);
+        this.data1Arr.push(obj.data1);
+        this.data4Arr.push(obj.data4);
+        this.chartData = [
+            {
+                data: this.data1Arr,
+                label: 'Data 1',
+                yAxisID: 'y-axis-1'
+            },
+            {
+                data: this.data2Arr,
+                label: 'Data 2',
+                yAxisID: 'y-axis-1'
+            },
+            {
+                data: this.data3Arr,
+                label: 'Data 3',
+                yAxisID: 'y-axis-2'
+            },
+            {
+                data: this.data4Arr,
+                label: 'Data 4',
+                yAxisID: 'y-axis-temp'
+            },
+            {
+                data: this.data5Arr,
+                label: 'Data 5',
+                yAxisID: 'y-axis-1'
+            }
+        ];
     }
 }
